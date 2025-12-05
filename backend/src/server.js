@@ -6,6 +6,7 @@ import cors from "cors";
 import connectDB from "./Config/dbconfig.js";
 import authRoutes from "./Routes/auth.js";
 import eventRoutes from "./Routes/event.js";
+import bookingRoutes from "./Routes/booking.js";
 
 dotenv.config();
 
@@ -19,10 +20,7 @@ app.use(express.json({ limit: "5mb" }));
 // routes
 app.use("/auth", authRoutes);
 app.use("/events", eventRoutes);
-
-// app.use("/tickets", require("./routes/tickets"));
-// app.use("/vip", require("./routes/vip"));
-// app.use("/support", require("./routes/support"));
+app.use("/bookings", bookingRoutes);
 
 app.get("/", (req, res) => res.send("Event Management API"));
 
