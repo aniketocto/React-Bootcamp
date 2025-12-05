@@ -5,6 +5,7 @@ import morgan from "morgan";
 import cors from "cors";
 import connectDB from "./Config/dbconfig.js";
 import authRoutes from "./Routes/auth.js";
+import eventRoutes from "./Routes/event.js";
 
 dotenv.config();
 
@@ -17,7 +18,8 @@ app.use(express.json({ limit: "5mb" }));
 
 // routes
 app.use("/auth", authRoutes);
-// app.use("/events", require("./routes/events"));
+app.use("/events", eventRoutes);
+
 // app.use("/tickets", require("./routes/tickets"));
 // app.use("/vip", require("./routes/vip"));
 // app.use("/support", require("./routes/support"));

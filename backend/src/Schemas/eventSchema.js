@@ -1,4 +1,5 @@
 const { z } = require("zod");
+const { role } = require("../Middlewares/auth");
 
 exports.createEvent = z.object({
   body: z.object({
@@ -10,5 +11,6 @@ exports.createEvent = z.object({
     endAt: z.string().optional(),
     capacity: z.number().int().optional(),
     totalRegistrations: z.number().int().optional(),
+    role: z.string().optional(),
   }),
 });
