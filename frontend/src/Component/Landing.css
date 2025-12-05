@@ -254,17 +254,15 @@
   overflow: hidden;
 }
 
-.placeholder-img {
+.event-header {
+  padding: 16px 18px;
   background: linear-gradient(135deg, #ff7a8b, #ff4b5c);
-  color: white;
-  font-size: 13px;
+  color: #ffffff;
+  font-size: 14px;
   font-weight: 500;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  padding: 10px 14px;
-  height: 120px;
+  border-radius: 18px 18px 0 0;
 }
+
 
 .event-body {
   padding: 12px 14px 14px;

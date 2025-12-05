@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Registration.css";
 
 const Signup = () => {
@@ -14,6 +14,8 @@ const Signup = () => {
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const navigate = useNavigate();
 
   // INPUT CHANGE
   const handleChange = (e) => {
@@ -30,9 +32,12 @@ const Signup = () => {
         [name]: ""
       });
     }
+    if (errors.form) {
+      setErrors((prev) => ({ ...prev, form: "" }));
+    }
   };
 
-  // VALIDATION
+  // VALIDATION (same as before)
   const validateForm = () => {
     const newErrors = {};
 
@@ -68,47 +73,61 @@ const Signup = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // SUBMIT
+  // SUBMIT → call backend
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+    setErrors((prev) => ({ ...prev, form: "" }));
 
     try {
-      console.log("Signup Data:", formData);
+      const response = await fetch("http://localhost:5000/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          phoneNumber: formData.phone, // backend expects phoneNumber
+          // if backend needs adminCode, add here as well
+        })
+      });
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        // backend might send { message: "..."}
+        const message =
+          data.message || "Signup failed. Please check your details.";
+        setErrors((prev) => ({ ...prev, form: message }));
+        return;
+      }
 
       alert("Signup successful!");
-
+      navigate("/login"); // redirect to login page
     } catch (error) {
       console.error("Signup error:", error);
-
       setErrors((prev) => ({
         ...prev,
-        form: "Signup failed. Try again."
+        form: "Server unreachable. Please try again later."
       }));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
-  // UI
   return (
     <div className="signup-container">
       <div className="signup-card">
-
         <h2 className="signup-title">Create Account</h2>
 
-        {errors.form && (
-          <p className="form-error">{errors.form}</p>
-        )}
+        {errors.form && <p className="form-error">{errors.form}</p>}
 
         <form onSubmit={handleSubmit} className="signup-form">
-
           {/* Name */}
           <div className="form-group">
             <input
@@ -119,7 +138,9 @@ const Signup = () => {
               onChange={handleChange}
               className={errors.name ? "error" : ""}
             />
-            {errors.name && <span className="error-message">{errors.name}</span>}
+            {errors.name && (
+              <span className="error-message">{errors.name}</span>
+            )}
           </div>
 
           {/* Email */}
@@ -132,7 +153,9 @@ const Signup = () => {
               onChange={handleChange}
               className={errors.email ? "error" : ""}
             />
-            {errors.email && <span className="error-message">{errors.email}</span>}
+            {errors.email && (
+              <span className="error-message">{errors.email}</span>
+            )}
           </div>
 
           {/* Phone */}
@@ -145,7 +168,9 @@ const Signup = () => {
               onChange={handleChange}
               className={errors.phone ? "error" : ""}
             />
-            {errors.phone && <span className="error-message">{errors.phone}</span>}
+            {errors.phone && (
+              <span className="error-message">{errors.phone}</span>
+            )}
           </div>
 
           {/* Password */}
@@ -158,7 +183,9 @@ const Signup = () => {
               onChange={handleChange}
               className={errors.password ? "error" : ""}
             />
-            {errors.password && <span className="error-message">{errors.password}</span>}
+            {errors.password && (
+              <span className="error-message">{errors.password}</span>
+            )}
           </div>
 
           {/* Confirm Password */}
@@ -171,10 +198,14 @@ const Signup = () => {
               onChange={handleChange}
               className={errors.confirmPassword ? "error" : ""}
             />
-            {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+            {errors.confirmPassword && (
+              <span className="error-message">
+                {errors.confirmPassword}
+              </span>
+            )}
           </div>
 
-          {/* Admin Code (optional) */}
+          {/* Admin Code (optional – only local for now) */}
           <div className="form-group">
             <input
               type="text"
@@ -185,7 +216,6 @@ const Signup = () => {
             />
           </div>
 
-          {/* Submit Btn */}
           <button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Creating account..." : "Sign Up"}
           </button>
@@ -194,7 +224,6 @@ const Signup = () => {
         <div className="already-user">
           Already have an account? <Link to="/login">Login</Link>
         </div>
-
       </div>
     </div>
   );

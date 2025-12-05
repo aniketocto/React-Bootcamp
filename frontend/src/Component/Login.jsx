@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import "./Login.css"; // adjust path if needed
-import { Link } from "react-router-dom"; // only if you're using router
+import "./Login.css";
+import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +11,8 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const navigate = useNavigate(); // ✅ needed for redirect
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -19,12 +21,17 @@ const Login = () => {
       [name]: value,
     });
 
-    // clear error for this field while typing
+    // clear field-level error while typing
     if (errors[name]) {
       setErrors({
         ...errors,
         [name]: "",
       });
+    }
+
+    // clear global error if any
+    if (errors.form) {
+      setErrors((prev) => ({ ...prev, form: "" }));
     }
   };
 
@@ -53,16 +60,46 @@ const Login = () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+    setErrors((prev) => ({ ...prev, form: "" }));
 
     try {
-      console.log("Login data:", formData);
-      // here you would call your login API
-      alert("Login successful! (dummy)");
+      const response = await fetch("http://localhost:5000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const message =
+          data.message || "Login failed. Please check your credentials.";
+        setErrors((prev) => ({ ...prev, form: message }));
+        return;
+      }
+
+      // ✅ store token in localStorage if backend sends it
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
+      // Optional: store user info too
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      alert("Login successful!");
+      navigate("/"); // ✅ redirect to landing page
     } catch (err) {
       console.error("Login failed:", err);
       setErrors((prev) => ({
         ...prev,
-        form: "Login failed. Please try again.",
+        form: "Server unreachable. Please try again later.",
       }));
     } finally {
       setIsSubmitting(false);
@@ -117,9 +154,9 @@ const Login = () => {
         <p className="login-helper">
           New to EventEase?
           <br />
-           <Link to="/signup" className="create-link">
-          Create an account
-           </Link>
+          <Link to="/signup" className="create-link">
+            Create an account
+          </Link>
         </p>
       </div>
     </div>

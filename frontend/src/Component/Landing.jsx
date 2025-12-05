@@ -1,8 +1,47 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+
 import { Link } from "react-router-dom";
 import "./Landing.css";
 
 const Landing = () => {
+    const [events, setEvents] = useState([]);
+const [eventsLoading, setEventsLoading] = useState(false);
+const [eventsError, setEventsError] = useState("");
+
+useEffect(() => {
+  const fetchEvents = async () => {
+    try {
+      setEventsLoading(true);
+      setEventsError("");
+
+      const res = await fetch("http://localhost:5000/events", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          // If this endpoint is protected, uncomment this:
+          // Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      const data = await res.json().catch(() => []);
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to load events");
+      }
+
+      setEvents(data); // data is an array
+    } catch (err) {
+      console.error("Error fetching events:", err);
+      setEventsError(err.message || "Could not load events");
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  fetchEvents();
+}, []);
+
+    
   return (
     <div className="landing-root">
       {/* NAVBAR */}
@@ -84,39 +123,60 @@ const Landing = () => {
 
         {/* TRENDING EVENTS */}
         <section id="trending" className="trending">
-          <h2>Trending near you</h2>
-          <div className="event-grid">
-            <div className="event-card">
-              <div className="event-img placeholder-img">Concert</div>
-              <div className="event-body">
-                <p className="event-title">Midnight Beats: DJ Night</p>
-                <p className="event-meta">Andheri · Fri · 10:00 PM</p>
-                <p className="event-price">From ₹799</p>
-                <button className="event-book-btn">Book now</button>
-              </div>
+  <h2>Trending near you</h2>
+
+  {eventsLoading && <p>Loading events...</p>}
+
+  {eventsError && <p style={{ color: "red", fontSize: "14px" }}>{eventsError}</p>}
+
+  {!eventsLoading && !eventsError && events.length === 0 && (
+    <p>No events available right now.</p>
+  )}
+
+  <div className="event-grid">
+    {!eventsLoading &&
+      !eventsError &&
+      events.map((event) => {
+        const dateObj = new Date(event.date);
+        const dateStr = dateObj.toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+        });
+
+        return (
+          <div className="event-card" key={event._id}>
+            {/* top red area – show type / description */}
+            <div className="event-header">
+              <span>{event.description || "Event"}</span>
             </div>
 
-            <div className="event-card">
-              <div className="event-img placeholder-img">Comedy</div>
-              <div className="event-body">
-                <p className="event-title">Laugh Riot Stand-up Special</p>
-                <p className="event-meta">BKC · Sat · 7:30 PM</p>
-                <p className="event-price">From ₹499</p>
-                <button className="event-book-btn">Book now</button>
-              </div>
-            </div>
+            {/* white area */}
+            <div className="event-body">
+              <p className="event-title">{event.title}</p>
 
-            <div className="event-card">
-              <div className="event-img placeholder-img">Sports</div>
-              <div className="event-body">
-                <p className="event-title">Night Football Arena</p>
-                <p className="event-meta">Lower Parel · Sun · 9:00 PM</p>
-                <p className="event-price">From ₹349</p>
-                <button className="event-book-btn">Book now</button>
-              </div>
+              <p className="event-meta">
+                {event.venue} · {dateStr} · {event.startAt} – {event.endAt}
+              </p>
+
+              <p className="event-price">
+                Capacity: {event.capacity} · Registered: {event.totalRegistrations}
+              </p>
+
+              <button
+                className="event-book-btn"
+                onClick={() => {
+                  // later you can navigate to /events/:id
+                  alert(`Booking flow coming soon for: ${event.title}`);
+                }}
+              >
+                Book now
+              </button>
             </div>
           </div>
-        </section>
+        );
+      })}
+  </div>
+</section>
 
         {/* CATEGORIES */}
         <section id="categories" className="categories">
