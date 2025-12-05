@@ -206,15 +206,16 @@ const Signup = () => {
           </div>
 
           {/* Admin Code (optional – only local for now) */}
-          <div className="form-group">
+          {/*<div className="form-group">
             <input
+              
               type="text"
               name="adminCode"
               placeholder="Admin Code (Optional)"
               value={formData.adminCode}
               onChange={handleChange}
             />
-          </div>
+          </div>*/}
 
           <button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Creating account..." : "Sign Up"}

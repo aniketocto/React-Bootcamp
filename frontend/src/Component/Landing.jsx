@@ -1,47 +1,48 @@
 import React, { useEffect, useState } from "react";
-
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";   // ✅ add useNavigate
 import "./Landing.css";
 
 const Landing = () => {
-    const [events, setEvents] = useState([]);
-const [eventsLoading, setEventsLoading] = useState(false);
-const [eventsError, setEventsError] = useState("");
+  const navigate = useNavigate();                      // ✅ hook INSIDE component
 
-useEffect(() => {
-  const fetchEvents = async () => {
-    try {
-      setEventsLoading(true);
-      setEventsError("");
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState("");
 
-      const res = await fetch("http://localhost:5000/events", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          // If this endpoint is protected, uncomment this:
-          // Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setEventsLoading(true);
+        setEventsError("");
 
-      const data = await res.json().catch(() => []);
+        const res = await fetch("http://localhost:5000/events", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            // If backend uses a different path, e.g. /api/events, change above URL
+            // If protected:
+            // Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
 
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to load events");
+        const data = await res.json().catch(() => []);
+
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to load events");
+        }
+
+        setEvents(data); // data is an array
+      } catch (err) {
+        console.error("Error fetching events:", err);
+        setEventsError(err.message || "Could not load events");
+      } finally {
+        setEventsLoading(false);
       }
+    };
 
-      setEvents(data); // data is an array
-    } catch (err) {
-      console.error("Error fetching events:", err);
-      setEventsError(err.message || "Could not load events");
-    } finally {
-      setEventsLoading(false);
-    }
-  };
+    fetchEvents();
+  }, []);
 
-  fetchEvents();
-}, []);
-
-    
   return (
     <div className="landing-root">
       {/* NAVBAR */}
@@ -60,13 +61,13 @@ useEffect(() => {
           </Link>
           <Link to="/signup" className="nav-signup-btn">
             Sign Up
-            </Link>
+          </Link>
         </div>
       </header>
 
       {/* MAIN */}
       <main className="landing-main">
-        {/* HERO: search for events */}
+        {/* HERO */}
         <section className="hero">
           <div className="hero-left">
             <h1>
@@ -79,24 +80,23 @@ useEffect(() => {
 
             {/* Search bar */}
             <div className="hero-search">
-  <div className="hero-search-top">
-    <select className="hero-city">
-      <option>Mumbai</option>
-      <option>Pune</option>
-      <option>Delhi</option>
-      <option>Bengaluru</option>
-    </select>
+              <div className="hero-search-top">
+                <select className="hero-city">
+                  <option>Mumbai</option>
+                  <option>Pune</option>
+                  <option>Delhi</option>
+                  <option>Bengaluru</option>
+                </select>
 
-    <input
-      className="hero-input"
-      type="text"
-      placeholder="Search for events, artists or venues"
-    />
-  </div>
+                <input
+                  className="hero-input"
+                  type="text"
+                  placeholder="Search for events, artists or venues"
+                />
+              </div>
 
-  <button className="hero-search-btn">Search</button>
-</div>
-
+              <button className="hero-search-btn">Search</button>
+            </div>
 
             {/* quick tags */}
             <div className="hero-tags">
@@ -108,7 +108,6 @@ useEffect(() => {
           </div>
 
           <div className="hero-right">
-            {/* simple preview card */}
             <div className="preview-card">
               <p className="preview-label">Trending today</p>
               <p className="preview-title">Sunset Live: Indie Concert</p>
@@ -123,60 +122,60 @@ useEffect(() => {
 
         {/* TRENDING EVENTS */}
         <section id="trending" className="trending">
-  <h2>Trending near you</h2>
+          <h2>Trending near you</h2>
 
-  {eventsLoading && <p>Loading events...</p>}
+          {eventsLoading && <p>Loading events...</p>}
 
-  {eventsError && <p style={{ color: "red", fontSize: "14px" }}>{eventsError}</p>}
+          {eventsError && (
+            <p style={{ color: "red", fontSize: "14px" }}>{eventsError}</p>
+          )}
 
-  {!eventsLoading && !eventsError && events.length === 0 && (
-    <p>No events available right now.</p>
-  )}
+          {!eventsLoading && !eventsError && events.length === 0 && (
+            <p>No events available right now.</p>
+          )}
 
-  <div className="event-grid">
-    {!eventsLoading &&
-      !eventsError &&
-      events.map((event) => {
-        const dateObj = new Date(event.date);
-        const dateStr = dateObj.toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "short",
-        });
+          <div className="event-grid">
+            {!eventsLoading &&
+              !eventsError &&
+              events.map((event) => {
+                const dateObj = new Date(event.date);
+                const dateStr = dateObj.toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                });
 
-        return (
-          <div className="event-card" key={event._id}>
-            {/* top red area – show type / description */}
-            <div className="event-header">
-              <span>{event.description || "Event"}</span>
-            </div>
+                return (
+                  <div className="event-card" key={event._id}>
+                    <div className="event-header">
+                      <span>{event.description || "Event"}</span>
+                    </div>
 
-            {/* white area */}
-            <div className="event-body">
-              <p className="event-title">{event.title}</p>
+                    <div className="event-body">
+                      <p className="event-title">{event.title}</p>
 
-              <p className="event-meta">
-                {event.venue} · {dateStr} · {event.startAt} – {event.endAt}
-              </p>
+                      <p className="event-meta">
+                        {event.venue} · {dateStr} · {event.startAt} –{" "}
+                        {event.endAt}
+                      </p>
 
-              <p className="event-price">
-                Capacity: {event.capacity} · Registered: {event.totalRegistrations}
-              </p>
+                      <p className="event-price">
+                        Capacity: {event.capacity} · Registered:{" "}
+                        {event.totalRegistrations}
+                      </p>
 
-              <button
-                className="event-book-btn"
-                onClick={() => {
-                  // later you can navigate to /events/:id
-                  alert(`Booking flow coming soon for: ${event.title}`);
-                }}
-              >
-                Book now
-              </button>
-            </div>
+                      {/* BOOKING FLOW: go to /event/:id */}
+                      <button
+                        className="event-book-btn"
+                        onClick={() => navigate(`/event/${event._id}`)}
+                      >
+                        Book now
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
           </div>
-        );
-      })}
-  </div>
-</section>
+        </section>
 
         {/* CATEGORIES */}
         <section id="categories" className="categories">
